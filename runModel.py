@@ -36,18 +36,24 @@ def main():
 	
 	parser.add_option("-l", "--flevel", dest="flevel", default=-1,
 	                  help="fidelity level to run", metavar="FLEVEL")	
+
+	parser.add_option('-i', '--iter', dest='maxiter', default = 300, help = "SU2 maxiter")
+
+	parser.add_option('-c', '--convergence', dest = 'convergence', default = 3, help = "SU2 convergence order")
 	
 	(options, args)=parser.parse_args()
 	
 	options.partitions = int( options.partitions )
 	options.flevel     = int( options.flevel )
+	options.maxiter    = int( options.maxiter)
+	options.convergence = int(options.convergence)
 	
 	if options.flevel < 0 :
 		sys.stderr.write("  ## ERROR : Please choose a fidelity level to run (option -l or --flevel)");
 		sys.exit(0);
 	
 	nozzle = multif.nozzle.NozzleSetup( options.filename, options.flevel );
-	
+	nozzle.su2_convergence_order = options.convergence 	
 	### HACK
 	#multif.MEDIUMF.AEROSPostProcessing(nozzle);
 	#sys.exit(1);
@@ -55,7 +61,7 @@ def main():
 	if nozzle.method == 'NONIDEALNOZZLE' :
 		multif.LOWF.Run(nozzle);
 	elif nozzle.method == 'EULER' or nozzle.method == 'RANS':
-		multif.MEDIUMF.Run(nozzle);
+		multif.MEDIUMF.Run(nozzle, maxiter = options.maxiter);
 		
 	# --- Output functions 
 	

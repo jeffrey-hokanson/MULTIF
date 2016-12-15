@@ -161,7 +161,7 @@ def SetupConfig (solver_options):
 				
 	return config;
 	
-def runSU2 ( nozzle ):
+def runSU2 ( nozzle , maxiter = 300):
 	
 	solver_options = Solver_Options();
 	
@@ -174,7 +174,7 @@ def runSU2 ( nozzle ):
 	
 	solver_options.LocalRelax = nozzle.LocalRelax;
 	
-	solver_options.NbrIte = 300;
+	solver_options.NbrIte = maxiter;
 	
 	solver_options.SU2_RUN = nozzle.SU2_RUN;
 	

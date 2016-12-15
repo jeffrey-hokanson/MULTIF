@@ -16,7 +16,7 @@ def CheckOptions (nozzle):
 		sys.exit(0);
 	
 
-def Run( nozzle ):
+def Run( nozzle , maxiter = 300):
 	
 	# --- Check SU2 version
 	
@@ -37,7 +37,7 @@ def Run( nozzle ):
 	
 	# --- Run CFD
 	
-	runSU2 (nozzle);
+	runSU2 (nozzle, maxiter = maxiter)
 	
 	# --- Run AEROS
 	
