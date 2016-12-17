@@ -166,6 +166,8 @@ class Nozzle:
 		fidelity_tags = config['FIDELITY_LEVELS_TAGS'].strip('()');
 		fidelity_tags = fidelity_tags.split(",");
 
+		nozzle.MaxCFL = 30.0;
+
 		NbrFidLev = len(fidelity_tags);
 
 		if NbrFidLev < 1 :
@@ -244,6 +246,7 @@ class Nozzle:
 						scaleMesh = 1.1;
 					elif meshsize == 'FINE':
 						scaleMesh = 0.5;
+						nozzle.MaxCFL = 15.0;
 
 					nozzle.meshhl = scaleMesh*np.asarray([0.1, 0.07, 0.06, 0.006, 0.0108]);
 
@@ -332,6 +335,13 @@ class Nozzle:
 			nozzle.su2_convergence_order = config['SU2_CONVERGENCE_ORDER'];
 		else:
 			nozzle.su2_convergence_order = 3;
+			
+		if 'SU2_EXT_ITER' in config:
+			nozzle.NbrIte = config['SU2_EXT_ITER'];
+		else:
+			nozzle.NbrIte = 300;
+			
+		
 		
 	def SetupBSplineCoefs(self, config):
 		
@@ -470,16 +480,26 @@ class Nozzle:
 		nozzle.height = coefs[coefs_size-1];
 		nozzle.length = coefs[coefs_size/2-1];
 		
-
+		nozzle.xthrust = -1; # --- x crd for the thrust integration
+		nozzle.ythrust = -1;
+		
 		if nozzle.method == 'RANS' or nozzle.method == 'EULER':
 			x    = [];
 			y    = [];
 
-			nx = 100;
+			nx = 400;
 			_meshutils_module.py_BSplineGeo3 (knots, coefs, x, y, nx);
-
+			
 			nozzle.xwall = x;
 			nozzle.ywall = y;
+
+			dx_exit = max(1.3*nozzle.meshhl[3], 0.001);
+			for i in range(0,nx) :
+				if (  x[nx-i-1] < x[-1]-dx_exit  ):
+					nozzle.x_thrust = x[nx-i-1];
+					nozzle.y_thrust = y[nx-i-1];
+					break;
+
 			
 		#coefs = np.array(([0.0000, 0.0000, 0.1500, 0.1700, 
 	  #    0.1900, 0.2124, 0.2269, 0.2734, 0.3218, 0.3218, 0.3230, 0.3343, 0.3474, 
@@ -1003,6 +1023,8 @@ def NozzleSetup( config_name, flevel, output='verbose' ):
 	nozzle = multif.nozzle.nozzle.Nozzle()
 	
 	config = SU2.io.Config(config_name)
+	
+	nozzle.postpro = 0; # Post-Processing mode? 
 	
 	# --- File names
 	
